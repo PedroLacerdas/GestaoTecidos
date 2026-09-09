@@ -1,0 +1,381 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Gestão de Tecidos e Estoque - Filtros Prensa</title>
+
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Chart.js para o gráfico -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+  <!-- Nosso arquivo CSS externo -->
+  <link rel="stylesheet" href="style.css">
+</head>
+<body class="min-h-screen p-4 md:p-6 relative">
+
+  <!-- ========================================== -->
+  <!-- TELA DE LOGIN -->
+  <!-- ========================================== -->
+  <div id="telaLogin" class="fixed inset-0 bg-slate-950 flex items-center justify-center p-4 z-50">
+    <div class="bg-slate-900 border border-slate-700 rounded-2xl max-w-sm w-full p-8 shadow-2xl">
+      <h1 class="text-2xl font-bold text-white mb-1 text-center">Gestão de Tecidos</h1>
+      <p class="text-sm text-slate-400 mb-6 text-center">Faça login para acessar o sistema</p>
+
+      <form onsubmit="fazerLogin(event)" class="space-y-4">
+        <div>
+          <label class="block text-xs font-medium mb-1 text-slate-400">Email</label>
+          <input type="email" id="loginEmail" required placeholder="seu@email.com"
+            class="w-full bg-slate-800 border border-slate-700 rounded-lg p-2.5 text-white focus:outline-none">
+        </div>
+        <div>
+          <label class="block text-xs font-medium mb-1 text-slate-400">Senha</label>
+          <input type="password" id="loginSenha" required placeholder="••••••••"
+            class="w-full bg-slate-800 border border-slate-700 rounded-lg p-2.5 text-white focus:outline-none">
+        </div>
+
+        <p id="loginErro" class="text-xs text-red-400 hidden"></p>
+
+        <button type="submit" class="w-full bg-blue-600 hover:bg-blue-500 text-white font-semibold py-2.5 rounded-lg transition-colors shadow">
+          Entrar
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <!-- ========================================== -->
+  <!-- CONTEÚDO DO APP (só aparece logado) -->
+  <!-- ========================================== -->
+  <div id="appConteudo" class="hidden">
+  <div class="max-w-6xl mx-auto space-y-6">
+
+    <!-- Cabeçalho Expandido -->
+    <header class="flex flex-col md:flex-row md:items-center justify-between border-b border-slate-700/80 card-painel p-6 md:p-8 rounded-xl gap-6 relative">
+      <div class="flex items-center gap-6">
+        <img id="appLogo" src="logo.png" alt="Logo Empresa" class="h-20 md:h-24 w-auto object-contain rounded-lg bg-white/10 p-2 border border-white/10" onerror="this.style.display='none'">
+        <div>
+          <h1 id="appTitulo" class="text-3xl md:text-4xl font-extrabold tracking-tight" style="color: var(--cor-texto-principal);">Gestão de Tecidos & Estoque</h1>
+          <p id="appSubtitulo" class="text-base md:text-lg font-medium mt-1 text-destaque">Controle de durabilidade de tecidos e saldo de almoxarifado</p>
+        </div>
+      </div>
+
+      <div class="flex items-center gap-4">
+        <!-- Seletor do Filtro -->
+        <div id="containerSeletorFiltro" class="flex bg-slate-900/80 p-2 rounded-xl border border-slate-700">
+          <button id="btnFiltro1" onclick="mudarFiltro(1)" class="px-5 py-2.5 rounded-lg font-semibold text-sm btn-principal transition-all shadow">
+            Filtro 01
+          </button>
+          <button id="btnFiltro2" onclick="mudarFiltro(2)" class="px-5 py-2.5 rounded-lg font-semibold text-sm text-slate-400 hover:text-white transition-all">
+            Filtro 02
+          </button>
+        </div>
+
+        <!-- Botão Abrir Modal de Personalização -->
+        <button onclick="abrirModalPersonalizacao()" class="p-3 bg-slate-800 hover:bg-slate-700 border border-slate-600 rounded-xl transition-all shadow" title="Personalizar Aparência">
+          <span class="hidden md:inline text-sm font-medium ml-1">Personalizar</span>
+        </button>
+
+        <!-- Usuário logado + Logout -->
+        <div class="flex items-center gap-2 bg-slate-900/80 px-3 py-2 rounded-xl border border-slate-700">
+          <span id="infoUsuarioLogado" class="text-xs text-slate-300 hidden md:inline"></span>
+          <button onclick="fazerLogout()" class="text-xs font-semibold text-red-400 hover:text-red-300" title="Sair">
+            Sair
+          </button>
+        </div>
+      </div>
+    </header>
+
+    <!-- NAVEGAÇÃO PRINCIPAL (Operação x Estoque) -->
+    <nav class="flex border-b border-slate-700 bg-slate-900/60 p-1.5 rounded-xl border">
+      <button id="btnNavOperacao" onclick="mudarVisaoPrincipal('operacao')" class="flex-1 py-3 px-4 rounded-lg font-bold text-sm transition-all text-white bg-slate-800 shadow border border-slate-600">
+         Operação dos Filtros Prensa
+      </button>
+      <button id="btnNavEstoque" onclick="mudarVisaoPrincipal('estoque')" class="flex-1 py-3 px-4 rounded-lg font-bold text-sm transition-all text-slate-400 hover:text-white">
+         Gestão de Estoque de Tecidos
+      </button>
+    </nav>
+
+    <!-- VISÃO 1: OPERAÇÃO DOS FILTROS PRENSA -->
+    <main id="visaoOperacao" class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+
+      <!-- Painel de Formulários -->
+      <section class="card-painel p-6 rounded-xl border border-slate-700/80 h-fit">
+
+        <!-- Abas -->
+        <div class="flex border-b border-slate-700 mb-6">
+          <button id="abaInstalarBtn" onclick="mudarAba('instalar')" class="flex-1 pb-3 font-semibold text-sm border-b-2 text-destaque" style="border-color: var(--cor-destaque);">
+            Nova Instalação
+          </button>
+          <button id="abaRetirarBtn" onclick="mudarAba('retirar')" class="flex-1 pb-3 font-semibold text-sm border-b-2 border-transparent text-slate-400 hover:text-white">
+            Dar Baixa / Trocar
+          </button>
+        </div>
+
+        <!-- Form 1: Instalação -->
+        <form id="formInstalar" onsubmit="salvarInstalacao(event)" class="space-y-4">
+          <span id="labelFiltroInstalar" class="text-xs font-semibold uppercase tracking-wider text-destaque block mb-2">Filtro Prensa 1</span>
+
+          <div>
+            <label class="block text-xs font-medium mb-1" style="color: var(--cor-texto-secundario);">Número da Placa</label>
+            <input type="number" id="numPlacaInstalar" min="1" max="160" required placeholder="Ex: 45"
+              class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2.5 text-white focus:outline-none">
+          </div>
+
+          <div>
+            <label class="block text-xs font-medium mb-1" style="color: var(--cor-texto-secundario);">Selecione o Tecido do Estoque</label>
+            <select id="fabricanteInstalar" required class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2.5 text-white focus:outline-none">
+              <!-- Preenchido via JS -->
+            </select>
+            <p class="text-[11px] text-emerald-400 mt-1">Ao instalar, 1 unidade será consumida do estoque.</p>
+          </div>
+
+          <div>
+            <label class="block text-xs font-medium mb-1" style="color: var(--cor-texto-secundario);">Ciclo de Instalação (Inicial)</label>
+            <input type="number" id="cicloInstalacao" required placeholder="Ex: 1000"
+              class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2.5 text-white focus:outline-none">
+          </div>
+
+          <button type="submit" class="w-full btn-principal font-medium py-2.5 rounded-lg transition-colors cursor-pointer shadow">
+            Salvar Instalação & Consumir Estoque
+          </button>
+        </form>
+
+        <!-- Form 2: Retirada / Baixa -->
+        <form id="formRetirar" onsubmit="salvarBaixa(event)" class="space-y-4 hidden">
+          <span id="labelFiltroRetirar" class="text-xs font-semibold uppercase tracking-wider text-amber-400 block mb-2">Filtro Prensa 1</span>
+
+          <div>
+            <label class="block text-xs font-medium mb-1" style="color: var(--cor-texto-secundario);">Placa Instalada</label>
+            <select id="selectPlacaRetirar" onchange="atualizarInfoPlaca()" required class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2.5 text-white focus:outline-none">
+              <option value="">Selecione uma placa...</option>
+            </select>
+          </div>
+
+          <div id="boxInfoPlaca" class="hidden bg-slate-900/60 p-3 rounded-lg border border-slate-700 text-xs text-slate-300 space-y-1">
+            <p><strong>Fabricante:</strong> <span id="infoFabricante">-</span></p>
+            <p><strong>Ciclo de Entrada:</strong> <span id="infoCicloEntrada">-</span></p>
+          </div>
+
+          <div>
+            <label class="block text-xs font-medium mb-1" style="color: var(--cor-texto-secundario);">Ciclo Atual de Retirada</label>
+            <input type="number" id="cicloRetirada" required placeholder="Ex: 3500"
+              class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2.5 text-white focus:outline-none">
+          </div>
+
+          <button type="submit" class="w-full bg-amber-600 hover:bg-amber-500 text-white font-medium py-2.5 rounded-lg transition-colors cursor-pointer shadow">
+            Calcular Durabilidade & Dar Baixa
+          </button>
+        </form>
+
+      </section>
+
+      <!-- Visualização de Dados -->
+      <section class="lg:col-span-2 space-y-6">
+
+        <!-- Gráfico Compacto -->
+        <div class="card-painel p-5 rounded-xl border border-slate-700/80">
+          <h2 id="tituloGrafico" class="text-base font-semibold mb-3" style="color: var(--cor-texto-principal);">
+            Média de Durabilidade (Ciclos) - Filtro 1
+          </h2>
+          <div class="h-48 w-full relative">
+            <canvas id="meuGrafico"></canvas>
+          </div>
+        </div>
+
+        <!-- Tabela de Histórico -->
+        <div class="card-painel p-6 rounded-xl border border-slate-700/80">
+          <h2 id="tituloTabela" class="text-lg font-semibold mb-4" style="color: var(--cor-texto-principal);">
+            Histórico de Trocas Concluídas - Filtro 1
+          </h2>
+          <div class="overflow-x-auto">
+            <table class="w-full text-left text-sm" style="color: var(--cor-texto-secundario);">
+              <thead class="bg-slate-900/80 uppercase text-xs">
+                <tr>
+                  <th class="p-3">Placa</th>
+                  <th class="p-3">Fabricante</th>
+                  <th class="p-3">Entrada</th>
+                  <th class="p-3">Saída</th>
+                  <th class="p-3">Durabilidade</th>
+                </tr>
+              </thead>
+              <tbody id="tabelaHistorico" class="divide-y divide-slate-700/60">
+                <!-- Preenchido via JS -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+      </section>
+
+    </main>
+
+    <!-- VISÃO 2: GESTÃO DE ESTOQUE DE TECIDOS -->
+    <section id="visaoEstoque" class="grid grid-cols-1 lg:grid-cols-3 gap-8 hidden">
+
+      <!-- Formulário de Entrada no Estoque -->
+      <div class="card-painel p-6 rounded-xl border border-slate-700/80 h-fit space-y-4">
+        <h2 class="text-xl font-bold text-white border-b border-slate-700 pb-3"> Entrada / Compra de Tecidos</h2>
+
+        <form onsubmit="lancarEntradaEstoque(event)" class="space-y-4">
+          <div>
+            <label class="block text-xs font-medium mb-1" style="color: var(--cor-texto-secundario);">Fabricante / Modelo dos Tecidos</label>
+            <input type="text" id="estoqueFabricante" required placeholder="Ex: Fabricante A, Feltros X"
+              class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2.5 text-white focus:outline-none">
+          </div>
+
+          <div>
+            <label class="block text-xs font-medium mb-1" style="color: var(--cor-texto-secundario);">Quantidade Adquirida (Unidades)</label>
+            <input type="number" id="estoqueQtd" min="1" required placeholder="Ex: 50"
+              class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2.5 text-white focus:outline-none">
+          </div>
+
+          <button type="submit" class="w-full bg-blue-600 hover:bg-blue-500 text-white font-semibold py-2.5 rounded-lg transition-colors shadow">
+            Dar Entrada no Estoque
+          </button>
+        </form>
+      </div>
+
+      <!-- Resumo do Saldo de Estoque e Histórico -->
+      <div class="lg:col-span-2 space-y-6">
+
+        <!-- Cards de Saldo do Estoque -->
+        <div class="card-painel p-6 rounded-xl border border-slate-700/80">
+          <h2 class="text-lg font-bold mb-4 text-white"> Saldo de Lonas em Estoque</h2>
+          <div id="gridSaldoEstoque" class="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <!-- Preenchido via JS -->
+          </div>
+        </div>
+
+        <!-- Tabela de Movimentações -->
+        <div class="card-painel p-6 rounded-xl border border-slate-700/80">
+          <h2 class="text-lg font-bold mb-4 text-white"> Histórico de Movimentações de Estoque</h2>
+          <div class="overflow-x-auto">
+            <table class="w-full text-left text-sm" style="color: var(--cor-texto-secundario);">
+              <thead class="bg-slate-900/80 uppercase text-xs">
+                <tr>
+                  <th class="p-3">Data</th>
+                  <th class="p-3">Tipo</th>
+                  <th class="p-3">Fabricante</th>
+                  <th class="p-3">Qtd</th>
+                  <th class="p-3">Detalhes</th>
+                </tr>
+              </thead>
+              <tbody id="tabelaMovimentacoesEstoque" class="divide-y divide-slate-700/60">
+                <!-- Preenchido via JS -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+      </div>
+
+    </section>
+
+  </div>
+  </div> <!-- fim #appConteudo -->
+
+  <!-- MODAL DE PERSONALIZAÇÃO -->
+  <div id="modalPersonalizacao" class="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 z-50 hidden">
+    <div class="bg-slate-900 border border-slate-700 rounded-2xl max-w-2xl w-full p-6 max-h-[90vh] overflow-y-auto shadow-2xl relative text-slate-100">
+
+      <button onclick="fecharModalPersonalizacao()" class="absolute top-4 right-4 text-slate-400 hover:text-white text-xl font-bold">
+        ✕
+      </button>
+
+      <div class="mb-6">
+        <h2 class="text-2xl font-bold text-white">Personalização do aplicativo</h2>
+        <p class="text-sm text-slate-400 mt-1">Ajuste logotipo, imagem de fundo, fontes e cores do aplicativo.</p>
+      </div>
+
+      <form onsubmit="salvarPersonalizacao(event)" class="space-y-6">
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 bg-slate-800/50 p-4 rounded-xl border border-slate-700">
+          <div>
+            <label class="block text-xs font-medium text-slate-300 mb-2">Fonte do Sistema</label>
+            <select id="inputFonte" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2.5 text-white text-sm">
+              <option value="Inter, sans-serif">Inter / Padrão</option>
+              <option value="Arial, sans-serif">Arial</option>
+              <option value="Roboto, sans-serif">Roboto</option>
+              <option value="'Segoe UI', sans-serif">Segoe UI</option>
+              <option value="monospace">Monospace (Técnico)</option>
+            </select>
+          </div>
+
+          <div>
+            <label class="block text-xs font-medium text-slate-300 mb-2">URL do Logo / Imagem</label>
+            <input type="text" id="inputLogoUrl" placeholder="Ex: logo.png ou link da imagem" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2.5 text-white text-sm">
+          </div>
+
+          <div class="md:col-span-2">
+            <label class="block text-xs font-medium text-slate-300 mb-2">URL da Imagem de Fundo de Tela</label>
+            <input type="text" id="inputFundoImgUrl" placeholder="Ex: fundo.jpg ou https://exemplo.com/fundo.jpg" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2.5 text-white text-sm">
+            <p class="text-[11px] text-slate-400 mt-1">Deixe em branco para usar apenas a cor sólida de fundo.</p>
+          </div>
+        </div>
+
+        <div class="border border-slate-700 rounded-xl p-5 space-y-4 bg-slate-800/30">
+          <h3 class="text-sm font-semibold text-slate-200 border-b border-slate-700 pb-2">Cores dos textos e fundos</h3>
+
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+
+            <div>
+              <label class="block text-xs text-slate-400 mb-1">Cor principal e botões</label>
+              <div class="flex items-center gap-2 bg-slate-900 p-1.5 rounded-lg border border-slate-700">
+                <input type="color" id="pickerCorPrincipal" class="w-8 h-8 rounded border-0 cursor-pointer bg-transparent">
+                <input type="text" id="hexCorPrincipal" class="bg-transparent border-0 text-sm font-mono text-white w-full uppercase focus:outline-none">
+              </div>
+            </div>
+
+            <div>
+              <label class="block text-xs text-slate-400 mb-1">Cor de destaque e identificação</label>
+              <div class="flex items-center gap-2 bg-slate-900 p-1.5 rounded-lg border border-slate-700">
+                <input type="color" id="pickerCorDestaque" class="w-8 h-8 rounded border-0 cursor-pointer bg-transparent">
+                <input type="text" id="hexCorDestaque" class="bg-transparent border-0 text-sm font-mono text-white w-full uppercase focus:outline-none">
+              </div>
+            </div>
+
+            <div>
+              <label class="block text-xs text-slate-400 mb-1">Textos principais do aplicativo</label>
+              <div class="flex items-center gap-2 bg-slate-900 p-1.5 rounded-lg border border-slate-700">
+                <input type="color" id="pickerTextoPrincipal" class="w-8 h-8 rounded border-0 cursor-pointer bg-transparent">
+                <input type="text" id="hexTextoPrincipal" class="bg-transparent border-0 text-sm font-mono text-white w-full uppercase focus:outline-none">
+              </div>
+            </div>
+
+            <div>
+              <label class="block text-xs text-slate-400 mb-1">Textos secundários do aplicativo</label>
+              <div class="flex items-center gap-2 bg-slate-900 p-1.5 rounded-lg border border-slate-700">
+                <input type="color" id="pickerTextoSecundario" class="w-8 h-8 rounded border-0 cursor-pointer bg-transparent">
+                <input type="text" id="hexTextoSecundario" class="bg-transparent border-0 text-sm font-mono text-white w-full uppercase focus:outline-none">
+              </div>
+            </div>
+
+            <div class="md:col-span-2">
+              <label class="block text-xs text-slate-400 mb-1">Fundo do aplicativo (Cor Sólida)</label>
+              <div class="flex items-center gap-2 bg-slate-900 p-1.5 rounded-lg border border-slate-700">
+                <input type="color" id="pickerFundoApp" class="w-8 h-8 rounded border-0 cursor-pointer bg-transparent">
+                <input type="text" id="hexFundoApp" class="bg-transparent border-0 text-sm font-mono text-white w-full uppercase focus:outline-none">
+              </div>
+            </div>
+
+          </div>
+        </div>
+
+        <div class="flex flex-wrap items-center gap-3 pt-2">
+          <button type="submit" class="flex-1 bg-emerald-600 hover:bg-emerald-500 text-white font-semibold py-2.5 px-4 rounded-xl transition-all flex items-center justify-center gap-2 shadow-lg cursor-pointer">
+            💾 Salvar personalização
+          </button>
+          <button type="button" onclick="restaurarPadrao()" class="bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-600 font-semibold py-2.5 px-4 rounded-xl transition-all flex items-center justify-center gap-2 cursor-pointer">
+            🔄 Restaurar padrão
+          </button>
+        </div>
+
+      </form>
+    </div>
+  </div>
+
+  <!-- Nosso arquivo JavaScript externo (agora como módulo, por causa do Firebase) -->
+  <script type="module" src="script.js"></script>
+</body>
+</html>
