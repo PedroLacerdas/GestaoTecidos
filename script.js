@@ -5,7 +5,6 @@ import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/fireba
 import {
   getAuth,
   signInWithEmailAndPassword,
-  createUserWithEmailAndPassword,
   onAuthStateChanged,
   signOut
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
@@ -623,52 +622,7 @@ async function mostrarApp(usuario) {
 function mostrarLogin() {
   document.getElementById('telaLogin').classList.remove('hidden');
   document.getElementById('appConteudo').classList.add('hidden');
-  document.getElementById('blocoCadastro').classList.add('hidden');
-  document.getElementById('blocoLogin').classList.remove('hidden');
 }
-
-window.mostrarTelaCadastro = function () {
-  document.getElementById('blocoLogin').classList.add('hidden');
-  document.getElementById('blocoCadastro').classList.remove('hidden');
-};
-
-window.mostrarTelaLoginBloco = function () {
-  document.getElementById('blocoCadastro').classList.add('hidden');
-  document.getElementById('blocoLogin').classList.remove('hidden');
-};
-
-window.fazerCadastro = async function (e) {
-  e.preventDefault();
-  const nome = document.getElementById('cadastroNome').value.trim();
-  const matricula = document.getElementById('cadastroMatricula').value.trim();
-  const senha = document.getElementById('cadastroSenha').value;
-  const erroEl = document.getElementById('cadastroErro');
-  erroEl.classList.add('hidden');
-
-  if (!nome || !matricula || senha.length < 6) {
-    erroEl.innerText = 'Preencha nome, matrícula e uma senha com pelo menos 6 caracteres.';
-    erroEl.classList.remove('hidden');
-    return;
-  }
-
-  const emailSintetico = `${matricula}@${DOMINIO_LOGIN}`;
-
-  try {
-    const credencial = await createUserWithEmailAndPassword(auth, emailSintetico, senha);
-    await setDoc(doc(db, "usuarios", matricula), { nome: nome });
-    // onAuthStateChanged cuida de mostrar o app automaticamente após o cadastro
-  } catch (err) {
-    console.error(err);
-    if (err.code === 'auth/email-already-in-use') {
-      erroEl.innerText = 'Essa matrícula já possui uma conta cadastrada.';
-    } else if (err.code === 'auth/weak-password') {
-      erroEl.innerText = 'Senha muito fraca. Use pelo menos 6 caracteres.';
-    } else {
-      erroEl.innerText = 'Não foi possível criar a conta. Tente novamente.';
-    }
-    erroEl.classList.remove('hidden');
-  }
-};
 
 window.fazerLogin = function (e) {
   e.preventDefault();
