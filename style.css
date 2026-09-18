@@ -1,0 +1,78 @@
+/* ==========================================
+   VARIÁVEIS DE PERSONALIZAÇÃO
+   (controladas via JS pelo modal de Personalização)
+   ========================================== */
+:root {
+  --cor-principal: #011a12;
+  --cor-destaque: #25057e;
+  --cor-texto-principal: #f8fafc;
+  --cor-texto-secundario: #94a3b8;
+  --cor-fundo-app: #0f172a;
+  --fonte-app: 'Inter', sans-serif;
+  --imagem-fundo-app: none;
+}
+
+/* ==========================================
+   BASE
+   ========================================== */
+body {
+  font-family: var(--fonte-app);
+  background-color: var(--cor-fundo-app);
+  background-image: var(--imagem-fundo-app);
+  background-size: cover;
+  background-position: center;
+  background-attachment: fixed;
+  color: var(--cor-texto-principal);
+}
+
+/* ==========================================
+   COMPONENTES PERSONALIZADOS
+   ========================================== */
+
+/* Painéis / cards (fundo levemente translúcido sobre o fundo do app) */
+.card-painel {
+  background-color: rgba(15, 23, 42, 0.75);
+  backdrop-filter: blur(6px);
+}
+
+/* Botão principal (cor de destaque escolhida na personalização) */
+.btn-principal {
+  background-color: var(--cor-principal);
+  color: var(--cor-texto-principal);
+}
+.btn-principal:hover {
+  filter: brightness(1.15);
+}
+
+/* Texto de destaque (usa a cor de destaque escolhida na personalização) */
+.text-destaque {
+  color: var(--cor-destaque);
+}
+.border-destaque {
+  border-color: var(--cor-destaque);
+}
+
+/* Botões do menu lateral */
+.nav-btn {
+  color: #94a3b8;
+  transition: all 0.15s ease;
+}
+.nav-btn:hover {
+  background-color: rgba(30, 41, 59, 0.6);
+  color: #f8fafc;
+}
+
+/* ==========================================
+   SCROLLBAR (opcional, só estética)
+   ========================================== */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background-color: rgba(148, 163, 184, 0.4);
+  border-radius: 8px;
+}
